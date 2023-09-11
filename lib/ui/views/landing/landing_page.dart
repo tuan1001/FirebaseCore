@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebasecore/ui/home_page.dart';
-import 'package:firebasecore/ui/login_page.dart';
+
+import 'package:firebasecore/ui/views/landing/home_page.dart';
+import 'package:firebasecore/ui/views/landing/login_page.dart';
 import 'package:flutter/material.dart';
 
 class LandingPage extends StatelessWidget {

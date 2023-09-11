@@ -8,11 +8,15 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebasecore/firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 
-import 'ui/landing_page.dart';
+import 'routes/routes.dart';
+import 'service/noti_service.dart';
+
+import 'ui/views/landing/landing_page.dart';
 
 /// The scopes required by this application.
-
+final navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([
@@ -20,10 +24,14 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await FirebaseApi().initNotification();
   runApp(
-    const MaterialApp(
+    GetMaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Google Sign In',
-      home: LandingPage(),
+      getPages: AppPages.routes,
+      navigatorKey: navigatorKey,
+      home: const LandingPage(),
     ),
   );
 }
