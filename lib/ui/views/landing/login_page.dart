@@ -9,7 +9,7 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    TextEditingController emailController = TextEditingController(text: 'a@gmail.com');
+    TextEditingController emailController = TextEditingController(text: 'b@gmail.com');
     TextEditingController passwordController = TextEditingController(text: '123456');
     AuthService authService = AuthService();
     return Scaffold(
