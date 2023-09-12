@@ -19,7 +19,7 @@ class HomePage extends StatelessWidget {
   }
 
   _buildUserList() {
-    return StreamBuilder(
+    return StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance.collection('users').snapshots(),
         builder: ((context, snapshot) {
           if (snapshot.hasError) {
@@ -28,36 +28,27 @@ class HomePage extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          QuerySnapshot querySnapshot = snapshot.data as QuerySnapshot;
-          return ListTile(
-            title: Text(FirebaseAuth.instance.currentUser!.email.toString()),
-            onTap: () {
-              Get.to(() => ChatPage(
-                    receiverUserEmail: FirebaseAuth.instance.currentUser!.email.toString(),
-                    receiverUserUid: FirebaseAuth.instance.currentUser!.uid.toString(),
-                  ));
-            },
-          );
 
-          //  ListView(
-          //   children: snapshot.data!.docs.map((doc) => _buildUserListItem(doc)).toList(),
-          // );
+          return ListView(
+            children: snapshot.data!.docs.map<Widget>((doc) => _buildUserListItem(doc)).toList(),
+          );
         }));
   }
 
   _buildUserListItem(DocumentSnapshot document) {
     Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
-
     if (FirebaseAuth.instance.currentUser!.email != data['email']) {
       return ListTile(
         title: Text(data['email']),
         onTap: () {
           Get.to(() => ChatPage(
-                receiverUserEmail: FirebaseAuth.instance.currentUser!.email.toString(),
-                receiverUserUid: FirebaseAuth.instance.currentUser!.uid.toString(),
+                receiverUserEmail: data['email'],
+                receiverUserUid: data['uid'],
               ));
         },
       );
+    } else {
+      return Container();
     }
   }
 }

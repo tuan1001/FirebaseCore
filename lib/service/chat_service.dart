@@ -6,17 +6,19 @@ class ChatServie {
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore fireStore = FirebaseFirestore.instance;
 
-  Future<void> sendMessage(String receiveId, String message) async {
+  Future<void> sendMessage(String receiveId, String message, String type) async {
     final String currentUserId = auth.currentUser!.uid;
     final String currentUserEmail = auth.currentUser!.email.toString();
+
     final Timestamp timestamp = Timestamp.now();
 
     Message newMessage =
-        Message(senderId: currentUserId, senderEmail: currentUserEmail, receiverId: receiveId, message: message, timestamp: timestamp);
+        Message(senderId: currentUserId, senderEmail: currentUserEmail, receiverId: receiveId, message: message, type: type, timestamp: timestamp);
 
     List<String> ids = [currentUserId, receiveId];
     ids.sort();
     String chatRoomId = ids.join('_');
+    print('chatRoomId $chatRoomId');
     await fireStore.collection('chat_rooms').doc(chatRoomId).collection('messages').add(newMessage.toMap());
   }
 
