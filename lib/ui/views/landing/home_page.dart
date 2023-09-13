@@ -12,13 +12,17 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     AuthService authService = AuthService();
+
+    List<Map<String, dynamic>> membersList = [];
     return Scaffold(
         appBar: AppBar(
           actions: [IconButton(onPressed: authService.handleSignout, icon: const Icon(Icons.logout))],
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            Get.to(() => const AddMemberPage());
+            Get.to(() => AddMemberPage(
+                  membersList: membersList,
+                ));
           },
           child: const Icon(Icons.group_add),
         ),
@@ -44,6 +48,7 @@ class HomePage extends StatelessWidget {
 
   _buildUserListItem(DocumentSnapshot document) {
     Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
+
     if (FirebaseAuth.instance.currentUser!.email != data['email']) {
       return ListTile(
         title: Text(data['email']),

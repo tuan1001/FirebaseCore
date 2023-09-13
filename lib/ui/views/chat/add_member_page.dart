@@ -1,9 +1,16 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first, must_be_immutable
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import 'create_group_page.dart';
+
 class AddMemberPage extends StatefulWidget {
-  const AddMemberPage({super.key});
+  List<Map<String, dynamic>> membersList = [];
+  AddMemberPage({
+    Key? key,
+    required this.membersList,
+  }) : super(key: key);
 
   @override
   State<AddMemberPage> createState() => _AddMemberPageState();
@@ -27,26 +34,11 @@ class _AddMemberPageState extends State<AddMemberPage> {
     await _firestore.collection('users').doc(_auth.currentUser!.uid).get().then((map) {
       setState(() {
         membersList.add({
-          "name": map['name'],
           "email": map['email'],
           "uid": map['uid'],
           "isAdmin": true,
         });
       });
-    });
-  }
-
-  void onSearch() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    await _firestore.collection('users').where("email", isEqualTo: _search.text).get().then((value) {
-      setState(() {
-        userMap = value.docs[0].data();
-        isLoading = false;
-      });
-      print(userMap);
     });
   }
 
@@ -62,7 +54,6 @@ class _AddMemberPageState extends State<AddMemberPage> {
     if (!isAlreadyExist) {
       setState(() {
         membersList.add({
-          "name": userMap!['name'],
           "email": userMap!['email'],
           "uid": userMap!['uid'],
           "isAdmin": false,
@@ -71,6 +62,7 @@ class _AddMemberPageState extends State<AddMemberPage> {
         userMap = null;
       });
     }
+    print(membersList);
   }
 
   void onRemoveMembers(int index) {
@@ -79,8 +71,10 @@ class _AddMemberPageState extends State<AddMemberPage> {
         membersList.removeAt(index);
       });
     }
+    print(membersList);
   }
 
+  //void getUser()
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
@@ -89,85 +83,93 @@ class _AddMemberPageState extends State<AddMemberPage> {
       appBar: AppBar(
         title: const Text("Add Members"),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: ListView.builder(
-                itemCount: membersList.length,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    onTap: () => onRemoveMembers(index),
-                    leading: const Icon(Icons.account_circle),
-                    title: Text(membersList[index]['name']),
-                    subtitle: Text(membersList[index]['email']),
-                    trailing: const Icon(Icons.close),
-                  );
-                },
-              ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('users').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Text('error');
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                    child: SizedBox(
+                  height: MediaQuery.of(context).size.height / 3,
+                  child: ListView(
+                    children: snapshot.data!.docs.map<Widget>((doc) => _buildUserListItem(doc)).toList(),
+                  ),
+                )),
+                SizedBox(
+                  height: size.height / 20,
+                ),
+                Flexible(
+                  child: ListView.builder(
+                    itemCount: membersList.length,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        onTap: () {
+                          setState(() {
+                            membersList.removeAt(index);
+                          });
+
+                          print(membersList);
+                        },
+                        leading: const Icon(Icons.account_circle),
+                        subtitle: Text(membersList[index]['email']),
+                        trailing: const Icon(Icons.close),
+                      );
+                    },
+                  ),
+                ),
+                SizedBox(
+                  height: size.height / 50,
+                ),
+              ],
             ),
-            SizedBox(
-              height: size.height / 20,
-            ),
-            Container(
-              height: size.height / 14,
-              width: size.width,
-              alignment: Alignment.center,
-              child: SizedBox(
-                height: size.height / 14,
-                width: size.width / 1.15,
-                child: TextField(
-                  controller: _search,
-                  decoration: InputDecoration(
-                    hintText: "Search",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+          );
+        },
+      ),
+      floatingActionButton: membersList.length >= 2
+          ? FloatingActionButton(
+              child: const Icon(Icons.forward),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => CreateGroup(
+                    membersList: membersList,
                   ),
                 ),
               ),
-            ),
-            SizedBox(
-              height: size.height / 50,
-            ),
-            isLoading
-                ? Container(
-                    height: size.height / 12,
-                    width: size.height / 12,
-                    alignment: Alignment.center,
-                    child: const CircularProgressIndicator(),
-                  )
-                : ElevatedButton(
-                    onPressed: onSearch,
-                    child: const Text("Search"),
-                  ),
-            userMap != null
-                ? ListTile(
-                    onTap: onResultTap,
-                    leading: const Icon(Icons.account_box),
-                    title: Text(userMap!['name']),
-                    subtitle: Text(userMap!['email']),
-                    trailing: const Icon(Icons.add),
-                  )
-                : const SizedBox(),
-          ],
-        ),
-      ),
-      // floatingActionButton: membersList.length >= 2
-      //     ? FloatingActionButton(
-      //         child: const Icon(Icons.forward),
-      //         onPressed: () => Navigator.of(context).push(
-      //           MaterialPageRoute(
-      //             builder: (_) => CreateGroup(
-      //               membersList: membersList,
-      //             ),
-      //           ),
-      //         ),
-      //       )
-      //     : const SizedBox(),
+            )
+          : const SizedBox(),
     );
+  }
+
+  _buildUserListItem(DocumentSnapshot document) {
+    Map<String, dynamic> data = document.data()! as Map<String, dynamic>;
+
+    if (FirebaseAuth.instance.currentUser!.email != data['email']) {
+      return ListTile(
+        title: Text(data['email']),
+        onTap: () {
+          setState(() {
+            membersList.add({
+              "email": data['email'],
+              "uid": data['uid'],
+              "isAdmin": false,
+            });
+          });
+
+          print(membersList);
+        },
+      );
+    } else {
+      return Container();
+    }
   }
 }
