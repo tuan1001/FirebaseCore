@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebasecore/service/auth_service.dart';
-import 'package:firebasecore/ui/views/chat/add_member_page.dart';
 import 'package:firebasecore/ui/views/chat/chat_page.dart';
+import 'package:firebasecore/ui/views/group/group_chat_page.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -13,16 +13,13 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     AuthService authService = AuthService();
 
-    List<Map<String, dynamic>> membersList = [];
     return Scaffold(
         appBar: AppBar(
           actions: [IconButton(onPressed: authService.handleSignout, icon: const Icon(Icons.logout))],
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            Get.to(() => AddMemberPage(
-                  membersList: membersList,
-                ));
+            Get.to(() => const GroupChatPage());
           },
           child: const Icon(Icons.group_add),
         ),

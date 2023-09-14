@@ -8,6 +8,7 @@ import 'package:firebasecore/ui/utils/widgets/items/chat_bubble.dart';
 import 'package:firebasecore/ui/utils/widgets/items/image_thumpnail.dart';
 import 'package:firebasecore/ui/utils/widgets/textfileds/textfield_custom.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
@@ -26,15 +27,24 @@ class _ChatPageState extends State<ChatPage> {
   final ChatServie chatServie = ChatServie();
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore fireStore = FirebaseFirestore.instance;
+  ScrollController scrollController = ScrollController();
   File? imageFile;
+
+  scrollToEnd() {
+    //scrollController.animateTo(scrollController.position.maxScrollExtent, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+    if (scrollController.hasClients) {
+      scrollController.animateTo(
+        scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
   Future getImage() async {
     ImagePicker imagePicker = ImagePicker();
     await imagePicker.pickImage(source: ImageSource.gallery).then((value) => {
-          if (value != null)
-            {
-              imageFile = File(value.path),
-              uploadImage(),
-            }
+          if (value != null) {imageFile = File(value.path), chatServie.sendImage(widget.receiverUserUid, '', 'img', imageFile)}
         });
   }
 
@@ -72,7 +82,24 @@ class _ChatPageState extends State<ChatPage> {
     if (messageController.text.isNotEmpty) {
       await chatServie.sendMessage(widget.receiverUserUid, messageController.text, 'text');
       messageController.clear();
+      scrollToEnd();
     }
+  }
+
+  void sendImage() async {}
+  @override
+  void initState() {
+    Future.delayed(const Duration(milliseconds: 300), () {
+      scrollToEnd();
+    });
+    // scrollController.addListener(scrollToEnd);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    scrollController.removeListener(scrollToEnd);
+    super.dispose();
   }
 
   @override
@@ -91,24 +118,31 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   _buildMessagesList() {
-    return StreamBuilder(
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return const Center(child: Text('Something went wrong'));
-        }
+    return StreamBuilder<QuerySnapshot>(
+      stream: chatServie.getMessages(auth.currentUser!.uid, widget.receiverUserUid),
+      builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        SchedulerBinding.instance.addPostFrameCallback((_) => scrollToEnd());
+        // if (snapshot.hasError) {
+        //   return const Center(child: Text('Something went wrong'));
+        // }
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
         QuerySnapshot querySnapshot = snapshot.data as QuerySnapshot;
-        return ListView.builder(
-          itemBuilder: (context, index) {
-            return _buildMessagesItem(querySnapshot.docs[index]);
-          },
-          itemCount: querySnapshot.docs.length,
-        );
+        // return
+        if (snapshot.data != null) {
+          return ListView.builder(
+            controller: scrollController,
+            itemBuilder: (context, index) {
+              return _buildMessagesItem(querySnapshot.docs[index]);
+            },
+            itemCount: querySnapshot.docs.length,
+          );
+        } else {
+          return Container();
+        }
       },
-      stream: chatServie.getMessages(auth.currentUser!.uid, widget.receiverUserUid),
     );
   }
 
@@ -116,6 +150,7 @@ class _ChatPageState extends State<ChatPage> {
     DocumentSnapshot documentSnapshot,
   ) {
     Map<String, dynamic> data = documentSnapshot.data() as Map<String, dynamic>;
+
     var alignment = data['senderId'] == auth.currentUser!.uid ? Alignment.centerRight : Alignment.centerLeft;
 
     return data['type'] == 'text'

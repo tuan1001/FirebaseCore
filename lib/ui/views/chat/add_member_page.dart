@@ -1,15 +1,12 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first, must_be_immutable
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebasecore/ui/views/group/create_group_page.dart';
 import 'package:flutter/material.dart';
 
-import 'create_group_page.dart';
-
 class AddMemberPage extends StatefulWidget {
-  List<Map<String, dynamic>> membersList = [];
-  AddMemberPage({
+  const AddMemberPage({
     Key? key,
-    required this.membersList,
   }) : super(key: key);
 
   @override
@@ -17,7 +14,6 @@ class AddMemberPage extends StatefulWidget {
 }
 
 class _AddMemberPageState extends State<AddMemberPage> {
-  final TextEditingController _search = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   List<Map<String, dynamic>> membersList = [];
