@@ -2,7 +2,11 @@
 
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebasecore/config/local_store_key.dart';
+import 'package:firebasecore/config/store_local.dart';
+import 'package:firebasecore/ui/views/home/page2.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
 
 class FirebaseApi {
   final _firebaseMessage = FirebaseMessaging.instance;
@@ -16,8 +20,8 @@ class FirebaseApi {
   final _localNotifications = FlutterLocalNotificationsPlugin();
   void handleMessage(RemoteMessage? message) {
     if (message == null) return;
-
-    // Get.to(const LandingPage());
+    print('handleMessage');
+    Get.to(() => const Page2());
   }
 
   Future initPushNotification() async {
@@ -69,9 +73,16 @@ class FirebaseApi {
   }
 
   Future<void> initNotification() async {
+    String? fcmToken;
     await _firebaseMessage.requestPermission();
-    final fcmToken = await _firebaseMessage.getToken();
-    print('TokenFCM: $fcmToken');
+    fcmToken = await StoreLocal.getString(key: LocalStoreKey.token);
+    if (fcmToken != null) {
+      print('TokenFCM: $fcmToken');
+    } else {
+      fcmToken = await _firebaseMessage.getToken();
+      print('TokenFCM: $fcmToken');
+    }
+
     initPushNotification();
     initLocalNotification();
   }
@@ -81,4 +92,6 @@ Future<void> handleBackgroundMessage(RemoteMessage message) async {
   print('Title: ${message.notification!.title}');
   print('Body: ${message.notification!.body}');
   print('Paylod: ${message.data}');
+  print('handleBackgroundMessage');
+  Get.to(() => const Page2());
 }

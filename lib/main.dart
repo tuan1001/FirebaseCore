@@ -7,6 +7,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebasecore/firebase_options.dart';
 import 'package:firebasecore/service/auth_service.dart';
+import 'package:firebasecore/ui/views/home/page1.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -30,16 +31,8 @@ void main() async {
   runApp(ChangeNotifierProvider(
     create: (context) => AuthService(),
     child: GetMaterialApp(
-        debugShowCheckedModeBanner: false, title: 'Google Sign In', getPages: AppPages.routes, navigatorKey: navigatorKey, home: const LandingPage()),
-  )
-      // GetMaterialApp(
-      //   debugShowCheckedModeBanner: false,
-      //   title: 'Google Sign In',
-      //   getPages: AppPages.routes,
-      //   navigatorKey: navigatorKey,
-      //   home: const LandingPage(),
-      // ),
-      );
+        debugShowCheckedModeBanner: false, title: 'Google Sign In', getPages: AppPages.routes, navigatorKey: navigatorKey, home: const Page1()),
+  ));
 }
 
 /// The SignInDemo app.
